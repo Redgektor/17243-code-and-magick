@@ -23,6 +23,3 @@ function getMessage(a, b) {
     return "Я прошёл" + " " + metersCount + " " + "метров";
   }
 }
-
-console.log( getMessage(true) );
-console.log( getMessage(false) );
