@@ -8,7 +8,7 @@ function getMessage(a, b) {
     return a ? "Я попал в" + " " + b : "Я никуда не попал";
 
   } else if (typeOfA === "number") {
-    return "Я прыгнул на" + " " + a + " " + "* 100 сантиметров";
+    return "Я прыгнул на" + " " + a * 100 + " " + "сантиметров";
 
   } else if (isArrayA && typeOfB === "undefined") {
     var stepsCount = a.reduce(function (sum, el) {
