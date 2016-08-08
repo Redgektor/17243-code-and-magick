@@ -465,7 +465,7 @@ window.Game = (function () {
        * функция вывода сообщения на холст
        */
       function createMessage(element) {
-      // параметры шрифта
+        // параметры шрифта
         self.ctx.font = '16px PT Mono, serif';
         self.ctx.textAlign = 'center';
         self.ctx.textBaseline = 'hanging';
@@ -475,33 +475,26 @@ window.Game = (function () {
         rectY += lineHeight;
       }
 
+      var message;
       switch (this.state.currentStatus) {
         case Verdict.WIN:
-          // createRect(rectX, rectY, rectWidth, spreadWisdom());
-          messagesList.win.forEach(function(element) {
-            createMessage(element);
-          });
+          message = messagesList.win;
           break;
-        case Verdict.FAIL:
-          // createRect(rectX, rectY, rectWidth, spreadWisdom());
-          messagesList.fail.forEach(function(element) {
-            createMessage(element);
-          });
-          break;
-        case Verdict.PAUSE:
-          // createRect(rectX, rectY, rectWidth, spreadWisdom());
-          messagesList.pause.forEach(function(element) {
-            createMessage(element);
 
-          });
+        case Verdict.FAIL:
+          message = messagesList.fail;
           break;
+
+        case Verdict.PAUSE:
+          message = messagesList.pause;
+          break;
+
         case Verdict.INTRO:
-          // createRect(rectX, rectY, rectWidth, spreadWisdom());
-          messagesList.intro.forEach(function(element) {
-            createMessage(element);
-          });
+          message = messagesList.intro;
           break;
       }
+      message.forEach(createMessage);
+
     },
 
     /**
