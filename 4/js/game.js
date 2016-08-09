@@ -394,12 +394,11 @@ window.Game = (function () {
     /**
      * Отрисовка экрана паузы.
      */
-    _drawPauseScreen: function() {
+    _drawPauseScreen: function () {
 
       /**
        * блок с переменными
        */
-
       var messagesList = {
         'win': 'Ты победил! Но запомни: дискретность индуктивно дискредитирует дедуктивный метод',
         'fail': 'Ты проиграл! Народная мудрость в утешение: "Реальность осмысленно транспонирует субъективный катарсис"',
@@ -429,34 +428,55 @@ window.Game = (function () {
       this._drawMessage(message);
 
     },
+    /**
+     * Отрисовка диалогового окна с сообщением
+     * @param {String[]} message текст собщения
+     */
+    _drawMessage: function (message) {
 
-    _drawMessage: function(message) {
+        /**
+         * параметры шрифта для корректного вычисления константы SYMBOL_WIDTH
+         */
+        this.ctx.font = '16px PT Mono, serif';
+
       /**
        * блок с переменными
        */
-
       var self = this;
 
-      var rectWidth = 500;
+      var rectWidth = 350;
       var rectHeight = 200;
-      var rectX = 100; // X-координата начала
-      var rectY = 45; // Y-координата начала
+      var rectX = 300; // X-координата начала
+      var rectY = 50; // Y-координата начала
 
-      var offsetX = 10; // смещение по X-координате
-      var offsetY = 10; // смещение по Y-координате
-
-      var arrayLength = 30;
+      var offset = 10; // смещение по X-и Y- координатам
 
       var fontSize = 16;
       var lineHeight = fontSize * 1.2;
 
+      // вычисляем ширину символа
+      var SYMBOL_WIDTH = self.ctx.measureText('M').width;
+      console.log(SYMBOL_WIDTH);
+
+      // вычисляем величину, равную кол-ву символов,
+      // которую способен вместить контейнер
+      var maxSymbolCount = rectWidth / SYMBOL_WIDTH;
+
+      // используем вычисленное значение для ограничения длины сообщения
+      // согласно значению в знаменателе
+      var arrayLength = maxSymbolCount / 1.5;
+
       /**
-       * функция отрисовывания диалогового окна:
+       * Функция отрисовывания диалогового окна:
+       * @param {Number} x координата левого верхнего угла по оси x
+       * @param {Number} y координата левого верхнего угла по оси y
+       * @param {Number} width ширина прямоугольника
+       * @param {Number} height высота прямоугольника
        */
       function createRect(x, y, width, height) {
         // 1. тень от прямоугольника
         self.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        self.ctx.fillRect(x + offsetX, y + offsetY, width, height);
+        self.ctx.fillRect(x + offset, y + offset, width, height);
 
         // 2. прямоугольник: обводка
         self.ctx.strokeStyle = '#000';
@@ -471,28 +491,31 @@ window.Game = (function () {
       createRect(rectX, rectY, rectWidth, rectHeight);
 
       /**
-       * функция вывода сообщения на холст
+       * Функция вывода сообщения на холст.
+       * @param {String} element Строка, которая передается ctx-объекту fillText
        */
       function createMessage(element) {
         // параметры шрифта
-        self.ctx.font = '16px PT Mono, serif';
         self.ctx.textAlign = 'center';
         self.ctx.textBaseline = 'hanging';
         self.ctx.fillStyle = '#000';
 
-        self.ctx.fillText(element, rectX + rectWidth / 2, rectY + rectHeight / 3);
+        self.ctx.fillText(element, rectX + rectWidth / 2, rectY + offset);
         rectY += lineHeight;
       }
 
       /**
-       * функция создания из строки массива заданной ширины:
+       * Функция создания из строки массива заданной ширины:
+       * @param {String} str строка, которую необходимо преобразовать в массив
+       * @param {Number} len число, ограничивающее длину эл-та в массиве
+       * @returns {Array}
        */
       function splitText(str, len) {
         var newArr = [];
 
         str = str.split(' ');
 
-        var result = str.reduce(function(sum, el) {
+        var result = str.reduce(function (sum, el) {
 
           if (( sum.length + el.length ) <= len) {
             return sum + ' ' + el;
@@ -509,6 +532,11 @@ window.Game = (function () {
 
         return newArr;
       }
+
+      // для каждой строки, записанной в виде строкового значения в объект messagesList,
+      // вызываем функцию splitText, после чего на каждой приведенной к массиву строке
+      // вызываем метод forEach, который в свою очередь возвращает callback-функцию,
+      // генерирующее сообщение на холсте
       splitText(message, arrayLength).forEach(createMessage);
     },
 
