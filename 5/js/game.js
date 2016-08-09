@@ -434,44 +434,37 @@ window.Game = (function () {
      */
     _drawMessage: function (message) {
 
-      /**
-       * параметры шрифта для корректного вычисления константы SYMBOL_WIDTH
-       */
-      this.ctx.font = '16px PT Mono, serif';
+        /**
+         * параметры шрифта для корректного вычисления константы SYMBOL_WIDTH
+         */
+        this.ctx.font = '16px PT Mono, serif';
 
       /**
        * блок с переменными
        */
       var self = this;
 
-      var rectWidth = 350;
+      var rectWidth = 330;
       var rectHeight = 200;
-      var rectX = 350; // X-координата начала
+      var rectX = 300; // X-координата начала
       var rectY = 50; // Y-координата начала
 
-      var offset = 20; // смещение по X-и Y- координатам
+      var offset = 10; // смещение по X-и Y- координатам
 
       var fontSize = 16;
       var lineHeight = fontSize * 1.2;
 
       // вычисляем ширину символа
       var SYMBOL_WIDTH = self.ctx.measureText('M').width;
+      console.log(SYMBOL_WIDTH);
 
       // вычисляем величину, равную кол-ву символов,
       // которую способен вместить контейнер
-      var maxSymbolCount = rectWidth / SYMBOL_WIDTH;
+      var maxSymbolCount = rectWidth - (offset * 2) / SYMBOL_WIDTH;
 
       // используем вычисленное значение для ограничения длины сообщения
       // согласно значению в знаменателе
-      var arrayLength = maxSymbolCount / 1.5;
-
-      // вычисляем ширину сообщения: ширину символа перемножаем на суммарное кол-во символов
-      var messageWidth = SYMBOL_WIDTH * arrayLength;
-
-      // вычисляем высоту сообщения: кол-во символов в передаваемой строке делим на кол-во символов,
-      // которыми мы ограничили вывод сообщения, далее полученное значение умножаем на высоту строки,
-      // и добавляем высоту символов.
-      var messageHeight = ( (message.length / arrayLength) * lineHeight ) + fontSize;
+      var arrayLength = maxSymbolCount;
 
       /**
        * Функция отрисовывания диалогового окна:
@@ -495,7 +488,7 @@ window.Game = (function () {
         self.ctx.fillRect(x, y, width, height);
       }
 
-      createRect( rectX - offset, rectY - offset, messageWidth + (offset * 2), messageHeight + (offset * 2) );
+      createRect(rectX, rectY, rectWidth, rectHeight);
 
       /**
        * Функция вывода сообщения на холст.
@@ -507,18 +500,18 @@ window.Game = (function () {
         self.ctx.textBaseline = 'hanging';
         self.ctx.fillStyle = '#000';
 
-        self.ctx.fillText(element, rectX + rectWidth / 3, rectY);
+        self.ctx.fillText(element, rectX + rectWidth / 2, rectY + offset);
         rectY += lineHeight;
       }
 
       /**
-       * Функция создания из строки массива с элементами заданной ширины:
+       * Функция создания из строки массива заданной ширины:
        * @param {String} str строка, которую необходимо преобразовать в массив
        * @param {Number} len число, ограничивающее длину эл-та в массиве
        * @returns {Array}
        */
       function splitText(str, len) {
-        var arr = [];
+        var newArr = [];
 
         str = str.split(' ');
 
@@ -528,16 +521,16 @@ window.Game = (function () {
             return sum + ' ' + el;
           }
 
-          arr.push(sum);
+          newArr.push(sum);
           sum = el;
 
           return sum;
 
         });
 
-        arr.push(result);
+        newArr.push(result);
 
-        return arr;
+        return newArr;
       }
 
       // для каждой строки, записанной в виде строкового значения в объект messagesList,
