@@ -1,5 +1,7 @@
 'use strict';
 
+var browserCookies = require('browser-cookies');
+
 window.form = (function() {
   var formContainer = document.querySelector('.overlay-container');
   var formCloseButton = document.querySelector('.review-form-close');
@@ -80,6 +82,65 @@ window.form = (function() {
   for (var i = 0; i < rating.length; i++) {
     rating[i].addEventListener('change', validateForm);
   }
+
+  /**
+   * Cookies
+   */
+
+  /**
+   * функция, возвращающая кол-во дней, прошедших с указанной даты
+   * @param {Number} month месяц, от 0 до 11
+   * @param  {Number} date дата, от 1 до 31
+   * @returns {Number}
+   */
+  function getExpiresDate(month, date) {
+
+    var currentDate = new Date();
+
+    /**
+     * получаю компоненты даты
+     * для создания текущей даты с часами / секундами, равными 0:
+     * таким образом последующие вычисления не будут содержать дробные величины
+     */
+    var currentYear = currentDate.getFullYear();
+    var currentMonth = currentDate.getMonth();
+    var currentDay = currentDate.getDate();
+
+    var today = new Date(currentYear, currentMonth, currentDay);
+    var randomDate = new Date(currentYear, month, date);
+    /**
+     * кол-во мс в сутках
+     */
+    var DAY_IN_MS = 3600 * 24 * 1000;
+
+    /**
+     * вычисляем, сколько дней в текущем году (год может быть високосным)
+     */
+    var currentYearDaysNumber = ( new Date(currentYear, 11, 31) - new Date(currentYear, 0, 0) ) / DAY_IN_MS;
+
+    /**
+     * вычисляем кол-во дней, прошедших с момента указанной даты,
+     * с последующей передачей вычисленного значения в функцию
+     * в качестве параметра
+     */
+    var daysDiff = (today - randomDate) / DAY_IN_MS;
+
+    return (daysDiff > 0) ? daysDiff : currentYearDaysNumber + daysDiff;
+  }
+
+  /**
+   * сохраняем выбранные значения в cookies
+   */
+  rating.value = browserCookies.get('review-mark') || rating.value;
+
+  nameField.value = browserCookies.get('review-name') || nameField.value;
+
+  reviewForm.onsubmit = function() {
+    var daysNumExpires = {expires: getExpiresDate(11, 9)};
+
+    browserCookies.set('review-mark', rating.value, daysNumExpires);
+    browserCookies.set('review-name', nameField.value, daysNumExpires);
+  };
 
   var form = {
     onClose: null,
