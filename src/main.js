@@ -3,6 +3,7 @@
 require('./check');
 require('./form');
 require('./game');
+require('./reviews');
 
 (function() {
   var game = new window.Game(document.querySelector('.demo'));
