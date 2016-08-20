@@ -1,20 +1,53 @@
 'use strict';
-
+/**
+ * блок переменных для получения данных с помощью JSONP-запроса
+ */
 // инициализируем глобальную переменную reviews пустым массивом
-window.reviews = [];
+var reviews = [];
 
 // инициализируем глобальную переменную CallbackRegistry пустым объектом,
 // представляющим собой реестр функций
 window.CallbackRegistry = {};
 var httpRequest = 'http://localhost:1506/api/reviews';
 
+/**
+ * блок переменных для работы с данными и шаблонизации
+ */
+var reviewsFilter = document.querySelector('.reviews-filter');
+var reviewsList = document.querySelector('.reviews-list');
+var templateElement = document.getElementById('review-template');
 
+var reviewToClone = (('content' in templateElement) ?
+  templateElement.content :
+  templateElement)
+  .querySelector('.review');
+
+/**
+ * Передает данные {Review} с сервера в массив
+ * @param {Review} data
+ */
 function saveReviews(data) {
-  window.reviews = data;
+  reviews = data;
+  drawReviewsList();
 }
 
 /**
- * Функция, получающая данные с сервера по JSONP
+ * Добавляет элементы {Review} в контейнер
+ */
+function drawReviewsList() {
+  var fragment = document.createDocumentFragment();
+
+  reviews.forEach(function(review) {
+    fragment.appendChild(getReviewElement(review));
+  });
+
+  reviewsList.appendChild(fragment);
+
+  reviewsFilter.classList.remove('invisible');
+}
+
+/**
+ * Получает данные с сервера по JSONP
  * по указанному http-запросу
  * @param {String} url: адрес, по которому надо получить данные
  * @param {Function} cb: callback-функция, в которая получит данные после загрузки
@@ -28,7 +61,7 @@ function getData(url, cb) {
   var callbackName = 'cb' + String(Math.random()).slice(-6);
 
   /**
-   * Функция, представляющая собой результат вызова JSONP-скрипта, с данными в качестве параметра
+   * Результат вызова JSONP-скрипта, с данными в качестве параметра
    * @param {Object[]} data: {*}
    */
   window.CallbackRegistry[callbackName] = function(data) {
@@ -46,5 +79,66 @@ function getData(url, cb) {
   document.body.appendChild(elem);
 }
 
-// 2-м параметром мы передаем функцию foo, которую вызовет getData, когда придут данные
+/**
+ * @typedef {Object} Review
+ * Отзыв
+ * @property {Object} author
+ * @property {String} author.name
+ * @property {String} author.picture
+ * @property {Number} review_usefulness
+ * @property {Number} rating
+ * @property {String} description
+ */
+
+/**
+ * Создает элемент на основе шаблона,
+ * описанного в теге template с данными, пришедшими с сервера
+ * @param {Review} data
+ * @return {HTMLElement}
+ */
+var getReviewElement = function(data) {
+  var review = reviewToClone.cloneNode(true);
+
+  var rating = review.querySelector('.review-rating');
+  var ratingMarks = ['', '-two', '-three', '-four', '-five'];
+  rating.classList.add('review-rating' + ratingMarks[data.rating - 1]);
+
+  var img = review.querySelector('.review-author');
+  var imgWidth = 124;
+  var imgHeight = 124;
+
+  var backgroundLoadTimeout;
+  var IMAGE_LOAD_TIMEOUT = 10000;
+
+  var backgroundImg = new Image();
+  img.alt = img.title = data.author.name;
+
+  backgroundImg.onload = function() {
+    clearTimeout(backgroundLoadTimeout);
+    img.src = data.author.picture;
+    img.width = imgWidth;
+    img.height = imgHeight;
+  };
+
+  backgroundImg.onerror = function() {
+    clearTimeout(backgroundLoadTimeout);
+    review.classList.add('review-load-failure');
+  };
+
+  backgroundImg.src = data.author.picture;
+
+  backgroundLoadTimeout = setTimeout(function() {
+    backgroundImg.src = '';
+    review.classList.add('review-load-failure');
+  }, IMAGE_LOAD_TIMEOUT);
+
+  review.querySelector('.review-text').textContent = data.description;
+
+  return review;
+};
+
+reviewsFilter.classList.add('invisible');
+
+// 2-м параметром мы передаем функцию saveReviews, которую вызовет getData, когда придут данные
 getData(httpRequest, saveReviews);
+
