@@ -13,18 +13,17 @@ var reviewsList = document.querySelector('.reviews-list');
 var reviewsFilter = document.querySelector('.reviews-filter');
 
 var load = require('./load');
-var review = require('./review');
-
+var Review = require('./review');
 /**
- * Передает данные {Review} с сервера в массив
- * @param {Review} data
+ * Передает данные {ReviewData[]} с сервера в массив
+ * @param {ReviewData[]} data
  */
 function saveReviews(data) {
   reviews = data;
 
   var fragment = document.createDocumentFragment();
-  reviews.forEach(function(elem) {
-    fragment.appendChild(review(elem));
+  reviews.forEach(function(reviewData) {
+    fragment.appendChild(new Review(reviewData).element);
   });
 
   reviewsList.appendChild(fragment);
@@ -34,5 +33,5 @@ function saveReviews(data) {
 
 reviewsFilter.classList.add('invisible');
 
-// 2-м параметром мы передаем функцию saveReviews, которую вызовет getData, когда придут данные
+// 2-м параметром мы передаем функцию saveReviews, которую вызовет load, когда придут данные
 load(httpRequest, saveReviews);
