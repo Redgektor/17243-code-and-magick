@@ -1,5 +1,7 @@
 'use strict';
 
+var loadImage = require('./load-image');
+
 /**
  * блок переменных для шаблонизации
  */
@@ -11,7 +13,7 @@ var reviewToClone = (('content' in templateElement) ?
   .querySelector('.review');
 
 /**
- * @typedef {Object} Review
+ * @typedef {Object} ReviewData
  * Отзыв
  * @property {Object} author
  * @property {String} author.name
@@ -22,48 +24,68 @@ var reviewToClone = (('content' in templateElement) ?
  */
 
 /**
- * Создает элемент на основе шаблона,
- * описанного в теге template с данными, пришедшими с сервера
- * @param {Review} data
- * @return {HTMLElement}
+ * Создает элемент {Review} на основе шаблона,
+ * описанного в теге template с данными {ReviewData}, пришедшими с сервера
+ * @param {ReviewData} data
+ * @constructor
  */
-module.exports = function(data) {
-  var review = reviewToClone.cloneNode(true);
+var Review = function(data) {
+  var self = this;
+  this.data = data;
+  this.element = reviewToClone.cloneNode(true);
 
-  var rating = review.querySelector('.review-rating');
+  var rating = this.element.querySelector('.review-rating');
   var ratingMarks = ['', '-two', '-three', '-four', '-five'];
-  rating.classList.add('review-rating' + ratingMarks[data.rating - 1]);
+  rating.classList.add('review-rating' + ratingMarks[this.data.rating - 1]);
 
-  var img = review.querySelector('.review-author');
+  var img = this.element.querySelector('.review-author');
   var imgWidth = 124;
   var imgHeight = 124;
 
-  var backgroundLoadTimeout;
-  var IMAGE_LOAD_TIMEOUT = 10000;
+  img.alt = img.title = this.data.author.name;
 
-  var backgroundImg = new Image();
-  img.alt = img.title = data.author.name;
 
-  backgroundImg.onload = function() {
-    clearTimeout(backgroundLoadTimeout);
-    img.src = data.author.picture;
-    img.width = imgWidth;
-    img.height = imgHeight;
+  loadImage(data.author.picture, function(isOk) {
+    if (isOk) {
+      img.src = self.data.author.picture;
+      img.width = imgWidth;
+      img.height = imgHeight;
+    } else {
+      self.element.classList.add('review-load-failure');
+    }
+  });
+
+  this.element.querySelector('.review-text').textContent = this.data.description;
+  this.reviewQuiz = this.element.querySelector('.review-quiz');
+  this.quizAnswerYes = this.element.querySelector('.review-quiz-answer-yes');
+  this.quizAnswerNo = this.element.querySelector('.review-quiz-answer-no');
+
+  this.onQuizClickHandler = function(event) {
+    self.setQuizState(event);
   };
 
-  backgroundImg.onerror = function() {
-    clearTimeout(backgroundLoadTimeout);
-    review.classList.add('review-load-failure');
-  };
-
-  backgroundImg.src = data.author.picture;
-
-  backgroundLoadTimeout = setTimeout(function() {
-    backgroundImg.src = '';
-    review.classList.add('review-load-failure');
-  }, IMAGE_LOAD_TIMEOUT);
-
-  review.querySelector('.review-text').textContent = data.description;
-
-  return review;
+  this.quizAnswerYes.addEventListener('click', this.onQuizClickHandler);
+  this.quizAnswerNo.addEventListener('click', this.onQuizClickHandler);
 };
+
+/**
+ * Делает активным выбранный вариант ответа
+ * @param {MouseEvent} event
+ */
+Review.prototype.setQuizState = function(event) {
+  var quizActive = this.reviewQuiz.querySelector('.review-quiz-answer-active');
+  if (quizActive !== null) {
+    quizActive.classList.remove('review-quiz-answer-active');
+  }
+  event.target.classList.add('review-quiz-answer-active');
+};
+
+/**
+ * Удаляет обработчики с элементов выбора варианта ответа
+ */
+Review.prototype.remove = function() {
+  this.quizAnswerYes.removeEventListener('click', this.onQuizClickHandler);
+  this.quizAnswerNo.removeEventListener('click', this.onQuizClickHandler);
+};
+
+module.exports = Review;
