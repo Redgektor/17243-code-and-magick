@@ -252,11 +252,18 @@ var Game = function(container) {
 
   this.ctx = this.canvas.getContext('2d');
 
+  this.THROTTLE_TIMEOUT = 100;
+  this.lastFunctionCall = 0;
+
+  this.parallax = true;
+
   this._onKeyDown = this._onKeyDown.bind(this);
   this._onKeyUp = this._onKeyUp.bind(this);
   this._pauseListener = this._pauseListener.bind(this);
 
   this.setDeactivated(false);
+
+  this._addParallax();
 };
 
 Game.prototype = {
@@ -387,6 +394,54 @@ Game.prototype = {
       this.initializeLevelAndStart(this.level, needToRestartTheGame);
 
       window.removeEventListener('keydown', this._pauseListener);
+    }
+  },
+
+  /**
+   * Перемещает блок .header-clouds
+   * в зависимости от положения прокрутки
+   */
+  _addParallax: function() {
+    var self = this;
+
+    /**
+     * Получает координаты элемента относительно страницы
+     * http://learn.javascript.ru/coordinates-document
+     * @param {HTMLElement} elem
+     * @return {{top: number, left: number}}
+     */
+    function getCoords(elem) {
+      var box = elem.getBoundingClientRect();
+      return {
+        top: box.top + pageYOffset,
+        left: box.left + pageXOffset
+      };
+    }
+
+    this.clouds = document.querySelector('.header-clouds');
+    var main = document.querySelector('main');
+
+    this.mainCoords = getCoords(main);
+
+    window.addEventListener('scroll', function() {
+      var scrollAmount = self.mainCoords.top - window.pageYOffset;
+      if (Date.now() - self.lastFunctionCall >= self.THROTTLE_TIMEOUT) {
+        if ( scrollAmount < 0) {
+          self.parallax = false;
+          self.setGameStatus(Verdict.PAUSE);
+        }
+        self.lastFunctionCall = Date.now();
+      }
+      self.parallax = true;
+      self._enableParallax();
+    });
+
+  },
+
+  _enableParallax: function() {
+    if (this.parallax) {
+      // перемещаем элемент на 50% относительно значения вертикальной прокрутки
+      this.clouds.style.left = -window.pageYOffset * 0.5 + 'px';
     }
   },
 
@@ -647,8 +702,8 @@ Game.prototype = {
           })[0];
 
           return me.state === ObjectState.DISPOSED ?
-              Verdict.FAIL :
-              Verdict.CONTINUE;
+            Verdict.FAIL :
+            Verdict.CONTINUE;
         },
 
         /**
