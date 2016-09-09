@@ -9,8 +9,11 @@ var httpRequest = 'http://localhost:1506/api/reviews';
  * блок переменных для фильтрации данных
  * и отрисовывания элементов в контейнер
  */
-// var activeFilter = 'reviews-all';
-var activeFilter = document.querySelector('input[type=radio][name=reviews][checked]').value;
+
+var reviewStorage = localStorage;
+var activeFilter = reviewStorage.getItem('activeFilter') || document.querySelector('input[type=radio][name=reviews][checked]').value;
+document.querySelector('input[type=radio][name=reviews][value=' + activeFilter + ']').checked = true;
+
 var reviewsList = document.querySelector('.reviews-list');
 var reviewsFilter = document.querySelector('.reviews-filter');
 var reviewsControls = document.querySelector('.reviews-controls');
@@ -77,6 +80,7 @@ reviewsMore.addEventListener('click', function() {
 
 reviewsFilter.addEventListener('change', function(evt) {
   if (evt.target.checked) {
+    reviewStorage.setItem('activeFilter', evt.target.value);
     changeFilter(evt.target.value);
   }
 }, true);
